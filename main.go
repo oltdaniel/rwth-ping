@@ -12,12 +12,15 @@ import (
 var DEBUG = (os.Getenv("D") == "1")
 
 func main() {
+	// construct new web instance
 	s := gin.New()
 
 	// Assign middlewares
 	if DEBUG {
+		// use logger
 		s.Use(gin.Logger())
 	} else {
+		// recover from hard failures
 		s.Use(gin.Recovery())
 	}
 
@@ -26,6 +29,8 @@ func main() {
 		c.String(http.StatusOK, "hello, world")
 	})
 
+	// initialize all components
+	tasks.Init()
 	// register all the tasks we know
 	tasks.RegisterAllTasks()
 	// start the scheduler
