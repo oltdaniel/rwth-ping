@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	stdlog "log"
 	"net/http"
 	"os"
 
@@ -37,5 +37,5 @@ func main() {
 	tasks.Start()
 
 	// run the gin server
-	log.Fatal(s.Run(":4001"))
+	stdlog.Fatal(s.Run(":4001"))
 }

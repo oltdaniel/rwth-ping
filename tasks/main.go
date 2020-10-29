@@ -72,6 +72,7 @@ var clockwerkInstance = clockwerk.New()
 // Register all known tasks in the system.
 func RegisterAllTasks() {
 	RegisterTask(messageTask)
+	RegisterTask(moodleLandingpageTask)
 }
 
 // Register a single task in the scheduler and the registered Task array.
