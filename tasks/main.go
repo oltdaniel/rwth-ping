@@ -3,6 +3,8 @@ package tasks
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/onatm/clockwerk"
@@ -12,8 +14,12 @@ import (
 // check if the debug flag is set
 var DEBUG = (os.Getenv("D") == "1")
 
+// regex to create task slug
+var taskSlugRegex = regexp.MustCompile("[^a-z0-9]")
+
 // The context a execution is runnung in
 type TaskContext struct {
+	Task      *Task
 	Logger    *log.Logger
 	StartTime time.Time
 }
@@ -38,6 +44,11 @@ func (c *TaskContext) Err(message string, v ...interface{}) {
 	c.Logger.Errorf(message, v...)
 }
 
+// Create a lower case, non special symbol, no space string
+func (c *TaskContext) TaskSlug() string {
+	return taskSlugRegex.ReplaceAllString(strings.ReplaceAll(strings.ToLower(c.Task.Name), " ", "-"), "")
+}
+
 // Register the general task informations.
 type Task struct {
 	Name     string
@@ -56,6 +67,7 @@ func (t Task) Run() {
 	t.logger.Debug("Starting.")
 	// construct context for this execution
 	context := TaskContext{
+		Task:      &t,
 		Logger:    t.logger.SubLogger("[exec]"),
 		StartTime: time.Now(),
 	}

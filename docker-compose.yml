@@ -1,7 +1,15 @@
-version: '3.1'
+version: '3.3'
 
 services: 
     app:
         build: .
+        env_file:
+            - influxdb.env
         ports:
             - 4001:4001
+
+    influxdb:
+        image: quay.io/influxdb/influxdb:2.0.0-rc
+        restart: always
+        ports:
+            - 8086:8086
