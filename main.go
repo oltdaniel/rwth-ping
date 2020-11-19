@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/oltdaniel/rwth-ping/tasks"
+	"github.com/oltdaniel/rwth-ping/workers"
 )
 
 var DEBUG = (os.Getenv("D") == "1")
@@ -29,7 +30,14 @@ func main() {
 		c.String(http.StatusOK, "hello, world")
 	})
 
-	// initialize all components
+	// initialize workers toolbox
+	workers.Init()
+	// register all exisiting workers
+	workers.RegisterAllWorkers()
+	// start all workers
+	workers.Start()
+
+	// initialize all tasks components
 	tasks.Init()
 	// register all the tasks we know
 	tasks.RegisterAllTasks()
