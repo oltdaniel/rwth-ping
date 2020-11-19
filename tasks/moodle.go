@@ -11,7 +11,7 @@ import (
 
 var moodleLandingpageTask = Task{
 	Name:     "Moodle Landingpage",
-	Interval: 1 * time.Second,
+	Interval: 1 * time.Minute,
 	Function: func(c *TaskContext) {
 		// record time
 		start := time.Now()
@@ -36,10 +36,10 @@ var moodleLandingpageTask = Task{
 		// check if we have an error here
 		if resp.StatusCode >= 400 {
 			// send message to the relevant workers
-			workers.SendMessage(workers.WORKER_TELEGRAM, workers.WorkerMessage{
-				Type: workers.WORKER_MESSAGETYPE_TELEGRAM,
+			workers.SendMessage(workers.WORKER_TELEGRAM_SEND, workers.WorkerMessage{
+				Type: workers.WORKER_MESSAGETYPE_TELEGRAM_SEND,
 				Data: workers.TelegramWorkerMessage{
-					TargetGroup: "moodle",
+					TargetGroup: "moodle_error",
 					Text: fmt.Sprintf(
 						"☢️ Moodle Error ☢️\n\n*Status*: %v\\.\n*Took*: %vms\\.",
 						resp.StatusCode,

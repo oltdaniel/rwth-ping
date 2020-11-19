@@ -7,7 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/oltdaniel/rwth-ping/tasks"
+	"github.com/oltdaniel/rwth-ping/utils"
 	"github.com/oltdaniel/rwth-ping/workers"
+	"github.com/rsms/go-log"
 )
 
 var DEBUG = (os.Getenv("D") == "1")
@@ -20,6 +22,7 @@ func main() {
 	if DEBUG {
 		// use logger
 		s.Use(gin.Logger())
+		log.RootLogger.Level = log.LevelDebug
 	} else {
 		// recover from hard failures
 		s.Use(gin.Recovery())
@@ -29,6 +32,12 @@ func main() {
 	s.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "hello, world")
 	})
+
+	// hook telegram webhook listener
+	s.POST("/webhooks/telegram/:token", workers.TelegramWebhookHandler)
+	if host := os.Getenv("HOST"); host != "" {
+		utils.SetTelegramWebhook(host)
+	}
 
 	// initialize workers toolbox
 	workers.Init()

@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"github.com/oltdaniel/rwth-ping/utils"
 	"github.com/rsms/go-log"
 )
@@ -23,15 +25,16 @@ type TelegramWorkerMessage struct {
 	ParseMode   string
 }
 
-const WORKER_MESSAGETYPE_TELEGRAM = "worker_messsagetype_telegram"
+const WORKER_MESSAGETYPE_TELEGRAM_SEND = "worker_messagetype_telegram_send"
+const WORKER_TELEGRAM_SEND = "worker_telegram_send"
 
 func telegramWorkerConsumer() {
 	for {
 		// wait for next message
-		m := <-workerChannels[WORKER_TELEGRAM]
+		m := <-workerChannels[WORKER_TELEGRAM_SEND]
 		// cast interface depending on type
 		switch m.Type {
-		case WORKER_MESSAGETYPE_TELEGRAM:
+		case WORKER_MESSAGETYPE_TELEGRAM_SEND:
 			// parse message in correct format
 			twm := m.Data.(TelegramWorkerMessage)
 			// check if the wanted target group exists
@@ -47,6 +50,32 @@ func telegramWorkerConsumer() {
 					sendTelegramMessage(tm)
 				}
 			}
+		}
+	}
+}
+
+const WORKER_MESSAGETYPE_TELEGRAM_RECEIVE_PRIVATE = "worker_messagetype_telegram_receive_private"
+const WORKER_MESSAGETYPE_TELEGRAM_RECEIVE_GROUP = "worker_messagetype_telegram_receive_group"
+const WORKER_TELEGRAM_RECEIVE = "worker_telegram_receive"
+
+type TelegramWorkerMessageReceive = TelegramUpdate
+
+func telegramWorkerRespondToPrivateMessages() {
+	for {
+		// wait for next message
+		m := <-workerChannels[WORKER_TELEGRAM_RECEIVE]
+		// cast interface depending on type
+		switch m.Type {
+		case WORKER_MESSAGETYPE_TELEGRAM_RECEIVE_PRIVATE:
+			// parse message in correct format
+			twm := m.Data.(TelegramWorkerMessageReceive)
+			// respond to private chat
+			tm := TelegramMessage{
+				ChatId:    strconv.Itoa(twm.Message.Chat.Id),
+				Text:      "Hi, I don't support this\\.",
+				ParseMode: "MarkdownV2",
+			}
+			sendTelegramMessage(tm)
 		}
 	}
 }
@@ -71,5 +100,58 @@ func sendTelegramMessage(tm TelegramMessage) {
 			fmt.Println(string(respText))
 			log.Error("Response read failed.")
 		}
+	}
+}
+
+type TelegramUpdate struct {
+	UpdateId int `json:"update_id"`
+	Message  struct {
+		MessageId int `json:"message_id"`
+		Chat      struct {
+			Id       int    `json:"id"`
+			Username string `json:"username"`
+			Type     string `json:"type"`
+		} `json:"chat"`
+		From struct {
+			Id       int    `json:"id"`
+			Username string `json:"username"`
+		} `json:"from"`
+		Text string `json:"text"`
+		Date int    `json:"date"`
+	}
+}
+
+func TelegramWebhookHandler(c *gin.Context) {
+	// verify provided token from path parameter
+	givenToken := c.Param("token")
+	if givenToken != utils.CONFIG.Telegram.Token {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   true,
+			"message": "hello hacker, bye hacker",
+		})
+		return
+	}
+	// parse body to struct
+	var tu TelegramUpdate
+	if err := c.BindJSON(&tu); err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   true,
+			"message": err,
+		})
+		return
+	}
+	// done response
+	c.JSON(http.StatusOK, gin.H{
+		"error":   false,
+		"message": "done",
+	})
+	// send message to workers depending on type
+	if tu.Message.Chat.Type == "private" {
+		// send private message
+		SendMessage(WORKER_TELEGRAM_RECEIVE, WorkerMessage{
+			Type: WORKER_MESSAGETYPE_TELEGRAM_RECEIVE_PRIVATE,
+			Data: tu,
+		})
 	}
 }

@@ -6,10 +6,6 @@ import (
 	"github.com/rsms/go-log"
 )
 
-const (
-	WORKER_TELEGRAM = "telegram_worker"
-)
-
 type WorkerMessage struct {
 	Type string
 	Data interface{}
@@ -42,7 +38,8 @@ func RegisterWorker(tag string, consumer func()) {
 }
 
 func RegisterAllWorkers() {
-	RegisterWorker(WORKER_TELEGRAM, telegramWorkerConsumer)
+	RegisterWorker(WORKER_TELEGRAM_SEND, telegramWorkerConsumer)
+	RegisterWorker(WORKER_TELEGRAM_RECEIVE, telegramWorkerRespondToPrivateMessages)
 }
 
 func CreateWorkerChannel(tag string) {
@@ -50,11 +47,13 @@ func CreateWorkerChannel(tag string) {
 }
 
 func Init() {
-	CreateWorkerChannel(WORKER_TELEGRAM)
+	CreateWorkerChannel(WORKER_TELEGRAM_SEND)
+	CreateWorkerChannel(WORKER_TELEGRAM_RECEIVE)
 }
 
 func Start() {
 	for _, v := range registeredWorkers {
 		go v.Consumer()
 	}
+	log.Debug("Registered all workers.")
 }

@@ -1,6 +1,6 @@
 telegram:
   token: TOKEN_HERE
   targetGroups:
-    moodle:
+    moodle_error:
       - some_chat_id
       - another_chat_id
