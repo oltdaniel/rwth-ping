@@ -11,8 +11,8 @@ import (
 	"github.com/rsms/go-log"
 )
 
-var org = "demo_org"
-var bucket = "rwth_ping"
+var org = os.Getenv("INFLUX_ORG")
+var bucket = os.Getenv("INFLUX_BUCKET")
 
 var influx = getInfluxClient()
 
