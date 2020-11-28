@@ -23,6 +23,47 @@ $ ./scripts/setup_influxdb.sh
 $ ./start.sh
 ```
 
+### `docker-compose`
+
+```yaml
+version: '3.3'
+
+services: 
+    app:
+        image: docker.pkg.github.com/oltdaniel/rwth-ping/server:main
+        environment:
+            D: 1
+            HOST: https://somehost.oltdaniel.at
+        env_file:
+            - influxdb.env
+        volumes:
+            - "./config.yml:/config.yml"
+        ports:
+            - 4001:4001
+
+    influxdb:
+        image: quay.io/influxdb/influxdb:2.0.0-rc
+        restart: always
+        ports:
+            - 8086:8086
+```
+
+```bash
+# create the dokcer-compose.yml
+$ nano docker-compose.yml
+# create influxdb.env file
+$ touch influxdb.env
+# start influxdb
+$ docker-compose up -d influxdb
+# visit HOST:8086
+# create buckets and token
+# add details to influxdb.env
+# SEE: influxdb_example.yml
+$ nano influxdb.env
+# start other services
+$ docker-compose up -d
+```
+
 ## Usage
 
 > **NOTE**: This is only a research project. It should not be used to monitor the university service
