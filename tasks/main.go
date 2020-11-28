@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 
+	"github.com/oltdaniel/rwth-ping/utils"
 	"github.com/onatm/clockwerk"
 	"github.com/rsms/go-log"
 )
@@ -46,12 +46,13 @@ func (c *TaskContext) Err(message string, v ...interface{}) {
 
 // Create a lower case, non special symbol, no space string
 func (c *TaskContext) TaskSlug() string {
-	return taskSlugRegex.ReplaceAllString(strings.ReplaceAll(strings.ToLower(c.Task.Name), " ", "-"), "")
+	return c.Task.Slug
 }
 
 // Register the general task informations.
 type Task struct {
 	Name     string
+	Slug     string
 	Interval time.Duration
 	Function func(*TaskContext)
 	logger   *log.Logger
@@ -89,12 +90,25 @@ func RegisterAllTasks() {
 
 // Register a single task in the scheduler and the registered Task array.
 func RegisterTask(t Task) {
+	// check if valid
+	if !taskSlugRegex.MatchString(t.Slug) {
+		panic(fmt.Sprintf("Task slug for '%v' with '%v' not valid.", t.Name, t.Slug))
+	}
+	// check if enabled
+	if !utils.CONFIG.IsEnabled(t.Slug) {
+		log.Debug("Task '%v' disabled.", t.Slug)
+		return
+	}
+	// overwrite default interval with custom from config
+	t.Interval = utils.CONFIG.GetInterval(t.Slug, t.Interval)
 	// init private variables of task
 	t.Init()
 	// append to registered tasks
 	registeredTasks = append(registeredTasks, t)
 	// register in scheduler
 	clockwerkInstance.Every(t.Interval).Do(t)
+	// debug message
+	log.Debug("Task '%v' enabled. Every %vseconds.", t.Slug, t.Interval.Seconds())
 }
 
 // Start the scheduler.

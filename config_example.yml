@@ -4,3 +4,9 @@ telegram:
     moodle_error:
       - some_chat_id
       - another_chat_id
+tasks:
+  moodle_landingpage:
+    interval: 60
+    enabled: true
+  message_task:
+    enabled: false

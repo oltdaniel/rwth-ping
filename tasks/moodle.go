@@ -11,6 +11,7 @@ import (
 
 var moodleLandingpageTask = Task{
 	Name:     "Moodle Landingpage",
+	Slug:     "moodle_landingpage",
 	Interval: 1 * time.Minute,
 	Function: func(c *TaskContext) {
 		// record time
