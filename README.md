@@ -1,6 +1,6 @@
 # rwth-ping
 
-:smirk: collecting sexy data
+collecting a lot of data
 
 ## Installation
 
